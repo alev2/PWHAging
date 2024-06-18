@@ -1,0 +1,42 @@
+function [outputArg1,outputArg2] = age_Distribution_MaxLikelihood(inputAge_Range,inputAge_Obseravations)
+%This function takes aan n-dimensional vector formatted like this:
+%  [0
+%   13
+%   24
+%   35
+%   45
+%   55
+%   100]
+% means that we group into bins of 0-13, 13-24, 25-34, and so forth
+%
+%   Corresponding probabilities vector:
+%   [0
+%    0.05
+%   ...
+% means probability of 0 in the first group, .05 in the second, so forth.
+
+integralDomain=[0,100,2000];
+
+ageObservations=round(100*inputAge_Obseravations/sum(inputAge_Obseravations));
+
+logNormPDF= @(x,mu,sigma)...
+    (1./(x*sigma*sqrt(2*pi))).*exp(-(log(x)-mu).^2./(2*sigma^2));
+
+likeMax=[];
+xx=linspace(1,100,1000);
+mumu=linspace(.1,10,1000);
+
+
+for i=1:length(xx)
+    for j=1:length(mumu)
+        for k=1:length(inputAge_Range)
+            
+
+
+        end
+
+
+
+
+end
+
