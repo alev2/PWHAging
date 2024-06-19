@@ -24,8 +24,8 @@ logNormPDF= @(x,mu,sigma)...
     (1./(x*sigma*sqrt(2*pi))).*exp(-(log(x)-mu).^2./(2*sigma^2));
 
 %the parameter space for max likelihood
-xx=linspace(log(5),log(80),50);
-mumu=linspace(log(1.05),log(2),50);
+xx=linspace(log(5),log(80),100);
+mumu=linspace(log(1.05),log(2),100);
 
 %this is an easy problem, so we get the max likelihood with a brute force
 %approach. Bite me.

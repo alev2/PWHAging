@@ -35,7 +35,7 @@ P_0=sum(firstYearData.Cases)*popDist(ageMesh);
 
 sols=[P_0];
 
-nTimeSteps=16/dt;
+nTimeSteps=50/dt;
 PLast=P_0;
 
 %beginningYear
@@ -59,6 +59,9 @@ sols=[sols P_cur];
 %two past solutions needed for BDF2
 PLast2=PLast;
 PLast=P_cur;
+newDiagsByYear=[newEntries];
+diagPDFsByYear=[newDiags(ageMesh)];
+
 %BDF2
 for i=1:nTimeSteps
 
@@ -72,7 +75,17 @@ for i=1:nTimeSteps
         [diagMu,diagSigma,newDiags,~]=...
             age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
             newEntries=sum(curYearData.Cases)*newDiags(ageMesh);
+            newDiagsByYear=[newDiagsByYear newEntries];
+            diagPDFsByYear=[diagPDFsByYear newDiags(ageMesh)];
+    elseif(curTime==2024)
+        mm=curTime
+         [dmdOp1,dmdOp2,apply_DMD]=dmd_Diag_Probability(newDiagsByYear,4,16,1);
+         newEntries=apply_DMD(newDiagsByYear(:,1),(curTime-2008));
+    elseif(curTime>2024)
+        mm=curTime
+        newEntries=apply_DMD(newDiagsByYear(:,1),(curTime-2008));
     end
+
 
     rhs=newEntries+2*M*PLast -.5*M*PLast2 - Mu*PLast;
     rhs(end)=0;
