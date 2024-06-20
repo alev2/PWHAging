@@ -11,9 +11,6 @@ ages=[0;firstYearData.AgeGroup;100];
 minAge=1;
 maxAge=101;
 
-%death rate
-mu=-log(1-.025);
-
 %this is the max likelihood fitting to the 2008 data to initialize the
 %population
 [maxMu,maxSigma,popDist,~]=...
@@ -33,8 +30,10 @@ Mu=assemble_Mortality_Matrix(lifeTable,ageMesh);
 %initial distribution
 P_0=sum(firstYearData.Cases)*popDist(ageMesh);
 
+%solution storage matrix
 sols=[P_0];
 
+%number of time steps
 nTimeSteps=15/dt;
 PLast=P_0;
 
@@ -42,6 +41,7 @@ PLast=P_0;
 yearStart=2008;
 timeOutput=[yearStart];
 
+%first time-step
 curTime=yearStart+dt;
 timeOutput=[timeOutput;curTime];
 curYearData=PWHNewDiagData(PWHNewDiagData.Year==yearStart,:);  
@@ -49,7 +49,7 @@ curYearData=PWHNewDiagData(PWHNewDiagData.Year==yearStart,:);
     age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
 newEntries=sum(curYearData.Cases)*newDiags(ageMesh);
 
-%initialize with Heun's method
+%first time step done using Heun's method
 PInt=PLast+dt*(-Mu*PLast-A*PLast+newEntries);
 P_cur=PLast+.5*dt*(-Mu*PLast-A*PLast -Mu*PInt - A*PInt +2*newEntries );
 
@@ -62,7 +62,7 @@ PLast=P_cur;
 newDiagsByYear=[newEntries];
 diagPDFsByYear=[newDiags(ageMesh)];
 
-%BDF2
+%begin BDF2 loop
 for i=1:nTimeSteps
 
     curTime=curTime+dt;
@@ -96,4 +96,5 @@ for i=1:nTimeSteps
 
 end
 
+%plotting function
 plotTimeSeries(sols,timeOutput,ageMesh);

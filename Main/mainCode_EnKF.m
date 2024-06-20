@@ -16,8 +16,6 @@ covarFactor=.01;
 minAge=1;
 maxAge=101;
 
-%death rate
-mu=-log(1-.025);
 
 %this is the max likelihood fitting to the 2008 data to initialize the
 %population
@@ -25,7 +23,7 @@ mu=-log(1-.025);
     age_Distribution_MaxLikelihood(ages,[0;firstYearData.Cases]);
 
 %time step
-dt=1.;
+dt=0.125;
 
 %age mesh initialization
 ageMesh=linspace(minAge,maxAge,(maxAge-minAge)/dt)';
@@ -41,31 +39,36 @@ Mu=assemble_Mortality_Matrix(lifeTable,ageMesh);
 %initial distribution
 P_0=sum(firstYearData.Cases)*popDist(ageMesh);
 
+%solution storage matrix
 sols=[P_0];
 
+%generate ensembles
 ensemble=mvnrnd(P_0,.001*(P_0*P_0'),100)';
-
 Q=ones(length(P_0),length(P_0));
 
-
+%number of time steps
 nTimeSteps=15/dt;
-PLast=ensemble;
+
 
 %beginningYear
 yearStart=2008;
 timeOutput=[yearStart];
 
+%initialize RHS for first time step
 curTime=yearStart+dt;
 timeOutput=[timeOutput;curTime];
 curYearData=PWHNewDiagData(PWHNewDiagData.Year==yearStart,:);  
 [diagMu,diagSigma,newDiags,~]=...
     age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
 newEntries=sum(curYearData.Cases)*newDiags(ageMesh);
+%"last" time step
+PLast=ensemble;
 
+%needed for Heun's
 PInt=zeros(size(ensemble));
 P_cur=zeros(size(ensemble));
 
-%initialize with Heun's method
+%first time step performed with with Heun's method
 for j=1:size(ensemble,2)
     PInt(:,j)=PLast(:,j)+dt*(-Mu*PLast(:,j)-A*PLast(:,j)+newEntries);
     P_cur(:,j)=PLast(:,j)+.5*dt*(-Mu*PLast(:,j)-A*PLast(:,j) -Mu*PInt(:,j) - A*PInt(:,j) +2*newEntries );
@@ -74,23 +77,25 @@ end
 %update solution
 solsPreCor=[sols mean(P_cur,2)];
 
+%EnKF (only active if dt=1)
+if(curTime-floor(curTime)==0 )
+    curYearData=PWHPrevData(PWHPrevData.Year==curTime,:);        
+    ensembleFunctional=intMat*P_cur;        
+    meanEnsemble=mean(ensembleFunctional,2);
 
-curYearData=PWHPrevData(PWHPrevData.Year==curTime,:);        
-ensembleFunctional=intMat*P_cur;        
-meanEnsemble=mean(ensembleFunctional,2);
+    fac1=ensembleFunctional-meanEnsemble*ones(100,1)';
+    fac2=P_cur-stateMean*ones(100,1)';
 
-fac1=ensembleFunctional-meanEnsemble*ones(100,1)';
-fac2=P_cur-stateMean*ones(100,1)';
+    Pzz=(1/(size(ensemble,2)-1))*fac1*fac1'+diag(covarFactor*ones(7,1));
+    Pxz=(1/(size(ensemble,2)-1))*fac2*fac1';
 
-Pzz=(1/(size(ensemble,2)-1))*fac1*fac1'+diag(covarFactor*ones(7,1));
-Pxz=(1/(size(ensemble,2)-1))*fac2*fac1';
+    K=Pxz*(Pzz\eye(7,7));
 
-K=Pxz*pinv(Pzz);
+    P_cur=P_cur+K*([0;curYearData.Cases]*ones(100,1)'+mvnrnd(zeros(7,1),diag(covarFactor*ones(7,1)),100)' -ensembleFunctional);
 
-P_cur=P_cur+K*([0;curYearData.Cases]*ones(100,1)'+mvnrnd(zeros(7,1),diag(covarFactor*ones(7,1)),100)' -ensembleFunctional);
+    sols=[sols mean(P_cur,2)];
 
-sols=[sols mean(P_cur,2)];
-
+end
 
 %two past solutions needed for BDF2
 PLast2=PLast;
@@ -99,8 +104,8 @@ PLast=P_cur;
 newDiagsByYear=[newEntries];
 diagPDFsByYear=[newDiags(ageMesh)];
 
-%BDF2
-for i=1:nTimeSteps
+%begin BDF2 loop
+for i=2:nTimeSteps
 
     curTime=curTime+dt;
     timeOutput=[timeOutput;curTime];
@@ -148,7 +153,7 @@ for i=1:nTimeSteps
         Pzz=(1/(size(ensemble,2)-1))*fac1*fac1'+diag(covarFactor*ones(7,1));
         Pxz=(1/(size(ensemble,2)-1))*fac2*fac1';
         
-        K=Pxz*pinv(Pzz);
+        K=Pxz*(Pzz\eye(7,7));
 
         P_cur=P_cur+K*([0;curYearData.Cases]*ones(100,1)' +mvnrnd(zeros(7,1),diag(covarFactor*ones(7,1)),100)' -ensembleFunctional);
 
@@ -161,4 +166,5 @@ for i=1:nTimeSteps
     
 end
 
+%plotting function
 plotTimeSeries(sols,timeOutput,ageMesh);
