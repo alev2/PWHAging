@@ -17,7 +17,7 @@ maxAge=101;
     age_Distribution_MaxLikelihood(ages,[0;firstYearData.Cases]);
 
 %time step
-dt=0.0625;
+dt=0.25;
 
 %age mesh initialization
 ageMesh=linspace(minAge,maxAge,(maxAge-minAge)/dt)';
@@ -34,7 +34,7 @@ P_0=sum(firstYearData.Cases)*popDist(ageMesh);
 sols=[P_0];
 
 %number of time steps
-nTimeSteps=15/dt;
+nTimeSteps=60/dt;
 PLast=P_0;
 
 %beginningYear
@@ -79,7 +79,7 @@ for i=1:nTimeSteps
             diagPDFsByYear=[diagPDFsByYear newDiags(ageMesh)];
     elseif(curTime==2024)
         mm=curTime
-         [dmdOp1,dmdOp2,apply_DMD]=dmd_Diag_Probability(newDiagsByYear,5,16,1);
+         [dmdOp1,dmdOp2,apply_DMD]=dmd_Diag_Probability(newDiagsByYear,4,16,1);
          newEntries=apply_DMD(newDiagsByYear(:,1),(curTime-2008));
     elseif(curTime>2024)
         mm=curTime
