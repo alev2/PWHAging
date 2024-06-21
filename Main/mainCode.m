@@ -17,7 +17,7 @@ maxAge=101;
     age_Distribution_MaxLikelihood(ages,[0;firstYearData.Cases]);
 
 %time step
-dt=0.0625;
+dt=0.25;
 
 %age mesh initialization
 ageMesh=linspace(minAge,maxAge,(maxAge-minAge)/dt)';
