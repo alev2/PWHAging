@@ -48,7 +48,7 @@ ensemble=mvnrnd(P_0,.001*(P_0*P_0'),100)';
 Q=ones(length(P_0),length(P_0));
 
 %number of time steps
-nTimeSteps=20/dt;
+nTimeSteps=15/dt;
 
 
 %beginningYear
