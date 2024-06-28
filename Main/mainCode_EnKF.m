@@ -19,11 +19,12 @@ maxAge=101;
 
 %this is the max likelihood fitting to the 2008 data to initialize the
 %population
-[maxMu,maxSigma,popDist,~]=...
-    age_Distribution_MaxLikelihood(ages,[0;firstYearData.Cases]);
+%[maxMu,maxSigma,popDist,~]=...
+%    age_Distribution_MaxLikelihood(ages,[0;firstYearData.Cases]);
+popDist=age_Distribution_Empirical_FitDist(ages,[0;firstYearData.Cases]);
 
 %time step
-dt=1.;
+dt=.25;
 
 %age mesh initialization
 ageMesh=linspace(minAge,maxAge,(maxAge-minAge)/dt)';
@@ -58,8 +59,9 @@ timeOutput=[yearStart];
 curTime=yearStart+dt;
 timeOutput=[timeOutput;curTime];
 curYearData=PWHNewDiagData(PWHNewDiagData.Year==yearStart,:);  
-[diagMu,diagSigma,newDiags,~]=...
-    age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
+%[diagMu,diagSigma,newDiags,~]=...
+%    age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
+newDiags=age_Distribution_Empirical_FitDist(ages,[0;curYearData.Cases]);
 newEntries=sum(curYearData.Cases)*newDiags(ageMesh);
 %"last" time step
 PLast=ensemble;
@@ -76,6 +78,7 @@ end
 
 %update solution
 solsPreCor=[sols mean(P_cur,2)];
+stateMean=mean(P_cur,2);
 
 %EnKF (only active if dt=1)
 if(curTime-floor(curTime)==0 )
@@ -114,8 +117,9 @@ for i=2:nTimeSteps
     if(curTime-floor(curTime)==0 && curTime<=2023)    
         mm=curTime
         curYearData=PWHNewDiagData(PWHNewDiagData.Year==curTime,:);  
-        [diagMu,diagSigma,newDiags,~]=...
-            age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
+%        [diagMu,diagSigma,newDiags,~]=...
+%            age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
+            newDiags=age_Distribution_Empirical_FitDist(ages,[0;curYearData.Cases]);
             newEntries=sum(curYearData.Cases)*newDiags(ageMesh);
             newDiagsByYear=[newDiagsByYear newEntries];
             diagPDFsByYear=[diagPDFsByYear newDiags(ageMesh)];
