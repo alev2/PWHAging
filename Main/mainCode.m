@@ -13,8 +13,15 @@ maxAge=101;
 
 %this is the max likelihood fitting to the 2008 data to initialize the
 %population
-[maxMu,maxSigma,popDist,~]=...
-    age_Distribution_MaxLikelihood(ages,[0;firstYearData.Cases]);
+%[maxMu,maxSigma,popDist,~]=...
+%    age_Distribution_MaxLikelihood(ages,[0;firstYearData.Cases]);
+%[maxMu,maxSigma,popDist,~]=...
+%   age_Distribution_MaxLikelihood_FitDist(ages,[0;firstYearData.Cases]);
+popDist=age_Distribution_Empirical_FitDist(ages,[0;firstYearData.Cases]);
+
+
+%maxMu
+%maxSigma
 
 %time step
 dt=0.25;
@@ -45,8 +52,13 @@ timeOutput=[yearStart];
 curTime=yearStart+dt;
 timeOutput=[timeOutput;curTime];
 curYearData=PWHNewDiagData(PWHNewDiagData.Year==yearStart,:);  
-[diagMu,diagSigma,newDiags,~]=...
-    age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
+%[diagMu,diagSigma,newDiags,~]=...
+%    age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
+%[diagMu,diagSigma,newDiags,~]=...
+%    age_Distribution_MaxLikelihood_FitDist(ages,[0;curYearData.Cases]);
+%diagMu
+%diagSigma
+newDiags=age_Distribution_Empirical_FitDist(ages,[0;curYearData.Cases]);
 newEntries=sum(curYearData.Cases)*newDiags(ageMesh);
 
 %first time step done using Heun's method
@@ -68,12 +80,17 @@ for i=1:nTimeSteps
     curTime=curTime+dt;
     timeOutput=[timeOutput;curTime];
 
-    %update the 
+    %update the new entries
     if(curTime-floor(curTime)==0 && curTime<=2023)    
         mm=curTime
         curYearData=PWHNewDiagData(PWHNewDiagData.Year==curTime,:);  
-        [diagMu,diagSigma,newDiags,~]=...
-            age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
+%        [diagMu,diagSigma,newDiags,~]=...
+%            age_Distribution_MaxLikelihood(ages,[0;curYearData.Cases]);
+%        [diagMu,diagSigma,newDiags,~]=...
+%            age_Distribution_MaxLikelihood_FitDist(ages,[0;curYearData.Cases]);
+%        diagMu
+%        diagSigma
+            newDiags=age_Distribution_Empirical_FitDist(ages,[0;curYearData.Cases]);
             newEntries=sum(curYearData.Cases)*newDiags(ageMesh);
             newDiagsByYear=[newDiagsByYear newEntries];
             diagPDFsByYear=[diagPDFsByYear newDiags(ageMesh)];
