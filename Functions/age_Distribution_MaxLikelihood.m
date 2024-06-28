@@ -1,4 +1,5 @@
 function [muMax,sigmaMax,maxLogNormPDF, likelihoodFun] = age_Distribution_MaxLikelihood(inputAge_Range,inputAge_Obseravations)
+
 %This function takes aan n-dimensional vector formatted like this:
 %  [0
 %   13
