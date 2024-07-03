@@ -1,3 +1,9 @@
+
+
+
+
+
+
 addpath('../Functions/');
 load('../Data/PWHPrevData.mat');
 load('../Data/PWHNewDiagData.mat');
@@ -24,14 +30,14 @@ popDist=age_Distribution_Empirical_FitDist(ages,[0;firstYearData.Cases]);
 %maxSigma
 
 %time step
-dt=0.25;
-
+dt=.25;
+dx=dt;
 %age mesh initialization
-ageMesh=linspace(minAge,maxAge,(maxAge-minAge)/dt)';
+ageMesh=linspace(minAge,maxAge,(maxAge-minAge)/dx)';
 
 %system matrices
-A=assemble_Age_Matrix(minAge,maxAge,dt);
-M=assemble_Mass_Matrix(size(A,1),dt);
+A=assemble_Age_Matrix(minAge,maxAge,dx);
+M=assemble_Mass_Matrix(size(A,1),dx);
 Mu=assemble_Mortality_Matrix(lifeTable,ageMesh);
 
 %initial distribution
@@ -41,7 +47,7 @@ P_0=sum(firstYearData.Cases)*popDist(ageMesh);
 sols=[P_0];
 
 %number of time steps
-nTimeSteps=15/dt;
+nTimeSteps=25/dt;
 PLast=P_0;
 
 %beginningYear
@@ -104,7 +110,7 @@ for i=1:nTimeSteps
     end
 
 
-    rhs=newEntries+2*M*PLast -.5*M*PLast2 - Mu*PLast;
+    rhs=newEntries+2*M*PLast -.5*M*PLast2- Mu*PLast;
     rhs(end)=0;
     P_cur=(1.5*M+A)\(rhs);    
     sols=[sols P_cur];    

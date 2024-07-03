@@ -11,5 +11,3 @@ PWHNewDiagData.Year(isnan(PWHNewDiagData.Year))=2020;
 PWHNewDiagData=sortrows(PWHNewDiagData,'AgeGroup');
 PWHNewDiagData=sortrows(PWHNewDiagData,'Year');
 %load('PWHNewDiagData.mat');
-PWHNewDiagData.SaxphonePhil=zeros(size(PWHNewDiagData,1),1);
-PWHNewDiagData.TromboneTony=zeros(size(PWHNewDiagData,1),1);
