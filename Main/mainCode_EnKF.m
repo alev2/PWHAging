@@ -1,6 +1,6 @@
 addpath('../Functions/');
-load('../Data/PWHPrevData.mat');
-load('../Data/PWHNewDiagData.mat');
+load('../Data/PWHPrevData_FinerStrat.mat');
+load('../Data/PWHNewDiagData_FinerStrat.mat');
 load('../Data/lifeTable.mat');
 
 
@@ -9,8 +9,10 @@ load('../Data/lifeTable.mat');
 %read data
 firstYearData=PWHPrevData(PWHPrevData.Year==2008,:);
 ages=[0;firstYearData.AgeGroup;100];
+nBins=size(ages,1)-1;
 annPrev=[firstYearData.Cases];
 
+nParticles=25;
 covarFactor=.1;
 
 %set some parameter values
@@ -45,7 +47,7 @@ P_0=sum(firstYearData.Cases)*popDist(ageMesh);
 sols=[P_0];
 
 %generate ensembles
-ensemble=mvnrnd(P_0,.001*(P_0*P_0'),100)';
+ensemble=mvnrnd(P_0,.001*(P_0*P_0'),nParticles)';
 Q=ones(length(P_0),length(P_0));
 
 %number of time steps
@@ -87,15 +89,15 @@ if(curTime-floor(curTime)==0 )
     ensembleFunctional=intMat*P_cur;        
     meanEnsemble=mean(ensembleFunctional,2);
     annPrev=[annPrev curYearData.Cases];
-    fac1=ensembleFunctional-meanEnsemble*ones(100,1)';
-    fac2=P_cur-stateMean*ones(100,1)';
+    fac1=ensembleFunctional-meanEnsemble*ones(nParticles,1)';
+    fac2=P_cur-stateMean*ones(nParticles,1)';
 
-    Pzz=(1/(size(ensemble,2)-1))*fac1*fac1'+diag(covarFactor*ones(7,1));
+    Pzz=(1/(size(ensemble,2)-1))*fac1*fac1'+diag(covarFactor*ones(nBins,1));
     Pxz=(1/(size(ensemble,2)-1))*fac2*fac1';
 
-    K=Pxz*(Pzz\eye(7,7));
+    K=Pxz*(Pzz\eye(nBins,nBins));
     
-    P_cur=P_cur+K*([0;curYearData.Cases]*ones(100,1)'+mvnrnd(zeros(7,1),diag(covarFactor*ones(7,1)),100)' -ensembleFunctional);
+    P_cur=P_cur+K*([0;curYearData.Cases]*ones(nParticles,1)'+mvnrnd(zeros(nBins,1),diag(covarFactor*ones(nBins,1)),nParticles)' -ensembleFunctional);
 
     sols=[sols mean(P_cur,2)];
 
@@ -157,15 +159,15 @@ for i=2:nTimeSteps
         ensembleFunctional=intMat*P_cur;        
         meanEnsemble=mean(ensembleFunctional,2); 
 
-        fac1=ensembleFunctional-meanEnsemble*ones(100,1)';
-        fac2=P_cur-stateMean*ones(100,1)';
+        fac1=ensembleFunctional-meanEnsemble*ones(nParticles,1)';
+        fac2=P_cur-stateMean*ones(nParticles,1)';
 
-        Pzz=(1/(size(ensemble,2)-1))*fac1*fac1'+diag(covarFactor*ones(7,1));
+        Pzz=(1/(size(ensemble,2)-1))*fac1*fac1'+diag(covarFactor*ones(nBins,1));
         Pxz=(1/(size(ensemble,2)-1))*fac2*fac1';
         
-        K=Pxz*(Pzz\eye(7,7));
+        K=Pxz*(Pzz\eye(nBins,nBins));
 
-        P_cur=P_cur+K*([0;curYearData.Cases]*ones(100,1)' +mvnrnd(zeros(7,1),diag(covarFactor*ones(7,1)),100)' -ensembleFunctional);
+        P_cur=P_cur+K*([0;curYearData.Cases]*ones(nParticles,1)' +mvnrnd(zeros(nBins,1),diag(covarFactor*ones(nBins,1)),nParticles)' -ensembleFunctional);
 
     end
    

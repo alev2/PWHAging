@@ -5,8 +5,8 @@
 
 
 addpath('../Functions/');
-load('../Data/PWHPrevData.mat');
-load('../Data/PWHNewDiagData.mat');
+load('../Data/PWHPrevData_FinerStrat.mat');
+load('../Data/PWHNewDiagData_FinerStrat.mat');
 load('../Data/lifeTable.mat');
 
 %read data
@@ -87,7 +87,7 @@ for i=1:nTimeSteps
     timeOutput=[timeOutput;curTime];
 
     %update the new entries
-    if(curTime-floor(curTime)==0 && curTime<=2023)    
+    if(curTime-floor(curTime)==0 && curTime<=2022)    
         mm=curTime
         curYearData=PWHNewDiagData(PWHNewDiagData.Year==curTime,:);  
 %        [diagMu,diagSigma,newDiags,~]=...
@@ -100,11 +100,11 @@ for i=1:nTimeSteps
             newEntries=sum(curYearData.Cases)*newDiags(ageMesh);
             newDiagsByYear=[newDiagsByYear newEntries];
             diagPDFsByYear=[diagPDFsByYear newDiags(ageMesh)];
-    elseif(curTime==2024)
+    elseif(curTime==2023)
         mm=curTime
-         [dmdOp1,dmdOp2,apply_DMD]=dmd_Diag_Probability(newDiagsByYear,5,16,1);
+         [dmdOp1,dmdOp2,apply_DMD]=dmd_Diag_Probability(newDiagsByYear,5,15,1);
          newEntries=apply_DMD(newDiagsByYear(:,1),(curTime-2008));
-    elseif(curTime>2024)
+    elseif(curTime>2023)
         mm=curTime
         newEntries=apply_DMD(newDiagsByYear(:,1),(curTime-2008));
     end
