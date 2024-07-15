@@ -1,4 +1,5 @@
 PWHDeathData=readtable('PWHDeathData.csv');
+
 PWHDeathData.Cases=strrep(PWHDeathData.Cases,',','');
 PWHDeathData.Cases=cellfun(@str2num,PWHDeathData.Cases);
 

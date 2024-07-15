@@ -19,15 +19,18 @@ ages=[0;firstYearData.AgeGroup;100];
 %agesK=[
 
 annPrev=[firstYearDeathData.Cases];
-nParticles=25;
-covarFactor=1e1;%1e-7;
-ensembleFactor=1e-3;
+nParticles=50;
+covarFactor=1e4;%1e-7;
+ensembleFactor=1e-02;
 filterWidth=1;
-%set some parameter values
+tikh=10000;
+lowFactor=1e-6;%1e-8;%1e2;
+
+%set some parqameter values
 minAge=1;
 maxAge=101;
 
-numFilterPasses=25;
+numFilterPasses=5;
 
 
 %this is the max likelihood fitting to the 2008 data to initialize the
@@ -43,10 +46,12 @@ nBins=size(ages,1)-1;
 dt=.25;
 
 %age mesh initialization
-ageMesh=linspace(minAge,maxAge,(maxAge-minAge)/dt)';
+ageMesh=linspace(minAge,maxAge,1+(maxAge-minAge)/dt)';
 
 %lets us quickly (if roughly) evaluate the population sizes in each bin
 [intMat,indSet]=buildAgeFunctionalMatrix(ages,ageMesh);
+
+
 
 %system matrices
 A=assemble_Age_Matrix(minAge,maxAge,dt);
@@ -56,6 +61,13 @@ M=assemble_Mass_Matrix(size(A,1),dt);
 %initial distribution
 P_0=sum(firstYearData.Cases)*popDist(ageMesh);
 
+penaltySize=size(P_0,1)-1;
+rankR=35;
+
+zz1=zeros(size(intMat,1),penaltySize);
+zz2=zeros(penaltySize,size(intMat,2));
+funcMat=[intMat zz1;  zz2 eye(penaltySize,penaltySize)];
+
 %solution storage matrix
 solsState=[P_0];
 %generate ensembles
@@ -64,10 +76,14 @@ sols=[muBase];
 Q=ones(length(muBase),length(muBase));
 
 
-%XX=makeLocalCovarianceMatrix(length(muBase));
-%XX=diag(sqrt(muBase))*XX*diag(sqrt(muBase));
-%ensemble=mvnrnd(muBase,ensembleFactor*XX,nParticles)';
-ensemble=mvnrnd(muBase,ensembleFactor*diag(muBase),nParticles)';
+XX=makeLocalCovarianceMatrix(length(muBase));
+XX=diag((muBase))*XX*diag((muBase));
+ensemble=(mvnrnd(muBase,ensembleFactor*XX,nParticles)');
+
+%ensemble=max(mvnrnd(muBase,ensembleFactor*diag(muBase),nParticles)',.0001*muBase*ones(nParticles,1)');
+%ensemble=mvnrnd(muBase,ensembleFactor*diag(ones(size(muBase,1),1)),nParticles)';
+%ensemble=mvnrnd(muBase,ensembleFactor*diag(muBase.*muBase),nParticles)';
+%ensemble=ensemble+.1*randn(size(ensemble)).*ensemble;
 %ensemble=muBase*ones(nParticles,1)'+((.025)*muBase*rand(nParticles,1)')
 %ensemble=log(MvLogNRand(muBase,ensembleFactor*(muBase),nParticles,diag(muBase)*ensembleFactor)');
 
@@ -83,7 +99,7 @@ yearStart=2008;
 timeOutput=[yearStart];
 
 %initialize RHS for first time step
-mm=yearStart;
+filterTime=yearStart;
 curTime=yearStart+dt;
 timeOutput=[timeOutput;curTime];
 curYearData=PWHNewDiagData(PWHNewDiagData.Year==yearStart,:);  
@@ -106,6 +122,7 @@ deathsByYear_Real=[];
 %first time step performed with with Heun's method
 for j=1:size(ensemble,2)
     %Mu=assemble_Mortality_Matrix([lifeTable(:,1) ensemble(:,j)],ageMesh);
+
     Mu=diag(ensemble(:,j));
     PInt(:,j)=PLast(:,j)+dt*(-Mu*PLast(:,j)-A*PLast(:,j)+newEntries);
     P_cur(:,j)=PLast(:,j)+.5*dt*(-Mu*PLast(:,j)-A*PLast(:,j) -Mu*PInt(:,j) - A*PInt(:,j) +2*newEntries );
@@ -138,10 +155,11 @@ if(curTime-floor(curTime)==0 )
     Pxz=(1/(size(ensemble,2)-1))*fac2*fac1';
 
     K=Pxz*(Pzz\eye(nBins,nBins));
-    
+   
+    ensemble=ensemble+K*( max( [0;curYearData.Cases]*ones(nParticles,1)'+ mvnrnd(zeros(nBins,1),(covarFactor*diag([ ones(nBins,1)])),nParticles)',1) -ensembleFunctional);
     %ensemble=ensemble+K*( max( [0;curYearData.Cases]*ones(nParticles,1)'+mvnrnd(zeros(nBins,1),(covarFactor*diag([ones(nBins,1)])),nParticles)',0) -ensembleFunctional);
     %ensemble=ensemble+K*([0;curYearData.Cases]*ones(nParticles,1)'+mvnrnd(zeros(nBins,1),(covarFactor*makeLocalCovarianceMatrix(nBins)),nParticles)' -ensembleFunctional);
-    ensemble=movmean(ensemble+K*([0;curYearData.Cases]*ones(nParticles,1)' -ensembleFunctional),filterWidth);
+    %ensemble=movmean(ensemble+K*([0;curYearData.Cases]*ones(nParticles,1)' -ensembleFunctional),filterWidth);
     %ensemble=max(ensemble,muBase*ones(nParticles,1)');
     
     sols=[sols mean(ensemble,2)];
@@ -171,7 +189,7 @@ while curTime<=(yearStart+nTimeSteps*dt)
 
     %update the 
     if(curTime-floor(curTime)==0 && curTime<=2022)    
-        mm=curTime
+        filterTime=curTime;
         curYearData=PWHNewDiagData(PWHNewDiagData.Year==curTime,:);  
         curYearPrevData=PWHPrevData(PWHPrevData.Year==curTime,:);  
 %        [diagMu,diagSigma,newDiags,~]=...
@@ -186,14 +204,14 @@ while curTime<=(yearStart+nTimeSteps*dt)
             %anp=size(annPrev)
             deceasedCur=zeros(size(PLast));
          PLast2=curYrLast2;
-         PLast=curYrLast;
+         PLast=curYrLast;         
     elseif(curTime==2023)
-        mm=curTime
+        filterTime=curTime;
          [dmdOp1,dmdOp2,apply_DMD]=dmd_Diag_Probability(newDiagsByYear,5,15,1);
          newEntries=apply_DMD(newDiagsByYear(:,1),(curTime-2008));
          deceasedCur=zeros(size(PLast));
     elseif(curTime>2023)
-        mm=curTime
+        filterTime=curTime;
         newEntries=apply_DMD(newDiagsByYear(:,1),(curTime-2008));
         deceasedCur=zeros(size(PLast));
     end
@@ -202,8 +220,6 @@ while curTime<=(yearStart+nTimeSteps*dt)
         %%%REEXAMINE WHETHER IT'S ACTUALLY THE BEST IDEA TO ADVANCE THE
         %%%MORTALITY EXPLICITLY... SOMEHOW I DOUBT IT.
         
-        %Mu=assemble_Mortality_Matrix([lifeTable(:,1) ensemble(:,j)],ageMesh);
-        %Mu=real(Mu);
         Mu=diag(ensemble(:,j));
         
         rhs=newEntries+2*M*PLast(:,j) -.5*M*PLast2(:,j);% - Mu*PLast(:,j);
@@ -212,12 +228,8 @@ while curTime<=(yearStart+nTimeSteps*dt)
         P_cur(:,j)=(1.5*M+A+Mu)\(rhs);    
         
         deceasedCur(:,j)= deceasedCur(:,j) + dt*Mu*P_cur(:,j);
-        %deceasedCur(:,j)= deceasedCur(:,j) + dt*Mu*PLast(:,j);        
-
-        %sols=[sols P_cur];    
-        %PLast2=PLast;
-        %PLast=P_cur;
     end
+    
     stateMean=mean(P_cur,2);
     solsStatePreCor=[solsStatePreCor stateMean];
     
@@ -226,33 +238,61 @@ while curTime<=(yearStart+nTimeSteps*dt)
    
     if((curTime+dt)-floor(curTime+dt)==0 && (curTime+dt)<=2022)    
 
+
+        %update filter pass
         filterPass=filterPass+1;
-        curState=[curTime filterPass]
+        
+        %the current year and filter pass
+        stateMessage=strcat('Time: ',num2str(curTime+dt,'%.0f'),'. Filter pass: ',num2str(filterPass),'.');
+        disp(stateMessage);
+        
+        %mean of the Kalman ensemble for the mortality rate.
         mortRateMean=mean(ensemble,2);
 
-        curYearData=PWHDeathData(PWHDeathData.Year==(curTime+dt),:)          
-        ensembleFunctional=intMat*deceasedCur;        
+        %get the real data from the current simulation year.        
+        curYearData=PWHDeathData(PWHDeathData.Year==floor(curTime),:);          
+
+        %evaluate ensemble functional.
+            %ensembleFunctional=intMat*deceasedCur;        
+            %ensembleFunctional=funcMat*[deceasedCur; (ensemble(3:end,:)-ensemble(1:end-2,:))/(2*dt)];
+        ensembleFunctional=funcMat*[deceasedCur; diff(ensemble)];
         meanEnsemble=mean(ensembleFunctional,2);
     
         annPrev=[annPrev curYearData.Cases];
         fac1=ensembleFunctional-meanEnsemble*ones(nParticles,1)';
         fac2=ensemble-mortRateMean*ones(nParticles,1)';
     
-        Pzz=(1/(size(ensemble,2)-1))*(fac1*fac1')+diag(covarFactor*[ones(nBins,1)]);
-%        Pzz=(1/(size(ensemble,2)-1))*(fac1*fac1')+(covarFactor*makeLocalCovarianceMatrix(nBins));
+        Pzz=(1/(size(ensemble,2)-1))*(fac1*fac1')+diag([covarFactor*ones(nBins,1); tikh*ones(penaltySize,1)]);
+        
+        [U,S,V]=svd(Pzz);    
+        UApx=U(:,1:rankR);
+        SApx=S(:,1:rankR);
+        SApx=diag(1./diag(SApx));
+        VApx=V(:,1:rankR);  
+        KFac=VApx*SApx*UApx';
+
         Pxz=(1/(size(ensemble,2)-1))*fac2*fac1';
+        
+        %Kalman gain (here it's solved approximately).
+            %K=Pxz*(Pzz\eye(nBins+penaltySize,nBins+penaltySize));
+        K=Pxz*KFac;
+                 
+        topBlock=[0;curYearData.Cases]*ones(nParticles,1)'+ mvnrnd(zeros(nBins,1),(covarFactor*diag([ ones(nBins,1)])),nParticles)';
+        %bottomBlock=mvnrnd(zeros(penaltySize,1),lowFactor*diag(muBase),nParticles)';   
+        bottomBlock=mvnrnd(zeros(penaltySize,1), lowFactor*diag(abs(diff(muBase))) ,nParticles)';   
+        MM=[topBlock;bottomBlock];
+        ensemble=(ensemble+K*( MM - ensembleFunctional));
+        
+        
+            %        ensemble=(movmean(ensemble+K*( max( [0;curYearData.Cases]*ones(nParticles,1)'+ mvnrnd(zeros(nBins,1),(covarFactor*diag([ ones(nBins,1)])),nParticles)',1) -ensembleFunctional),filterWidth));
+            %        ensemble=ensemble+K*([0;curYearData.Cases]*ones(nParticles,1)'+mvnrnd(zeros(nBins,1),(covarFactor*makeLocalCovarianceMatrix(nBins)),nParticles)' -ensembleFunctional);
+            %        ensemble=movmean(ensemble+K*([0;curYearData.Cases]*ones(nParticles,1)' -ensembleFunctional),filterWidth);
+            %        ensemble=max(ensemble,muBase*ones(nParticles,1)');
 
-        K=Pxz*(Pzz\eye(nBins,nBins));
-    
-        %ensemble=ensemble+K*( max( [0;curYearData.Cases]*ones(nParticles,1)'+mvnrnd(zeros(nBins,1),(covarFactor*diag([ ones(nBins,1)])),nParticles)',0) -ensembleFunctional);
-%        ensemble=ensemble+K*([0;curYearData.Cases]*ones(nParticles,1)'+mvnrnd(zeros(nBins,1),(covarFactor*makeLocalCovarianceMatrix(nBins)),nParticles)' -ensembleFunctional);
-        ensemble=movmean(ensemble+K*([0;curYearData.Cases]*ones(nParticles,1)' -ensembleFunctional),filterWidth);
-%        ensemble=max(ensemble,muBase*ones(nParticles,1)');
 
-    
-        %deceasedCur=zeros(size(ensemble));
+        %here we update the filter.    
         if(filterPass<=numFilterPasses)
-           curTime=mm;
+           curTime=filterTime;
            deceasedCur=zeros(size(ensemble));
            PLast2=curYrLast2;
            PLast=curYrLast;

@@ -4,7 +4,7 @@ function [A] = assemble_Age_Matrix(a,b,da)
 
     
 %matrix size and such
-    N=(b-a)/da;
+    N=1+(b-a)/da;
     A=zeros(N,N);
 
 %We can treat the inflow boundary naively here, because the population at

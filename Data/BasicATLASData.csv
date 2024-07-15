@@ -1,0 +1,57 @@
+﻿"Date Printed: Friday, July 12, 2024 11:08:07 AM"
+Title: "HIV deaths | HIV diagnoses | HIV prevalence | 2008 | 2009 | 2010 | 2011 | 2012 | 2013 | 2014 | 2015 | 2016 | 2017 | 2018 | 2019 | 2020 (COVID-19 Pandemic) | 2021 | 2022 | United States | All races/ethnicities | Both sexes | Ages 13 years and older | All transmission categories""
+Footnote(s): Data for 2023 are considered preliminary (subject to a 12-month reporting delay). Inclusion of preliminary data in trend assessments is discouraged. Numbers less than 12͵ and rates and percentages based on these numbers͵ should be interpreted with caution. HIV diagnoses and PrEP data for the year 2020͵ which coincided with the onset of the COVID-19 pandemic͵ should be interpreted with caution due to the impact of the pandemic on access to HIV testing͵ PrEP prescriptions͵ and care-related services. Data by transmission category presented based on sex assigned at birth and are adjusted for missing transmission category. See Technical notes for more details on data availability and stratifications.
+   Death data for the year 2022 are preliminary and based on death data received by CDC as of December 2023. Deaths in 2020 and beyond should be interpreted considering the impact of the COVID-19 pandemic. For additional information͵ see <a href=https://www.cdc.gov/nchs/nvss/vsrr/covid19/excess_deaths.htm>https://www.cdc.gov/nchs/nvss/vsrr/covid19/excess_deaths.htm</a>. Death data based on residence at death. See Technical Notes for death reporting by jurisdiction.
+   Prevalence data for the year 2022 are preliminary and based on death data received by CDC as of December 2023. Prevalence data prior to 2010 are based on residence at diagnosis; prevalence data from 2010 to present are based on most recent known address. See Technical Notes for death reporting by jurisdiction.
+   ^ Jurisdiction with incomplete reporting of deaths for most recent year.
+   The 'Sex' column is used for either sex assigned at birth or gender identity.
+   NA - Not applicable.
+
+
+
+Indicator,Year,Cases,Rate per 100000
+"HIV prevalence","2008","762,563","303.8"
+"HIV diagnoses","2008","46,703","18.6"
+"HIV deaths","2008","18,405","7.3"
+"HIV prevalence","2009","789,587","311.8"
+"HIV diagnoses","2009","44,324","17.5"
+"HIV deaths","2009","17,902","7.1"
+"HIV prevalence","2010","818,561","319.3"
+"HIV diagnoses","2010","42,775","16.7"
+"HIV deaths","2010","16,640","6.5"
+"HIV prevalence","2011","844,203","326.4"
+"HIV diagnoses","2011","40,945","15.8"
+"HIV deaths","2011","16,196","6.3"
+"HIV prevalence","2012","869,358","333.1"
+"HIV diagnoses","2012","40,183","15.4"
+"HIV deaths","2012","15,941","6.1"
+"HIV prevalence","2013","893,271","339.2"
+"HIV diagnoses","2013","38,931","14.8"
+"HIV deaths","2013","15,856","6.0"
+"HIV prevalence","2014","917,870","345.4"
+"HIV diagnoses","2014","39,653","14.9"
+"HIV deaths","2014","16,096","6.1"
+"HIV prevalence","2015","942,988","351.9"
+"HIV diagnoses","2015","39,543","14.8"
+"HIV deaths","2015","15,795","5.9"
+"HIV prevalence","2016","967,557","358.0"
+"HIV diagnoses","2016","39,163","14.5"
+"HIV deaths","2016","16,331","6.0"
+"HIV prevalence","2017","991,448","364.0"
+"HIV diagnoses","2017","38,048","14.0"
+"HIV deaths","2017","16,320","6.0"
+"HIV prevalence","2018","1,014,481","369.9"
+"HIV diagnoses","2018","37,132","13.5"
+"HIV deaths","2018","16,192","5.9"
+"HIV prevalence","2019","1,036,801","375.6"
+"HIV diagnoses","2019","36,350","13.2"
+"HIV deaths","2019","16,266","5.9"
+"HIV prevalence","2020 (COVID-19 Pandemic)","1,049,709","375.4"
+"HIV diagnoses","2020 (COVID-19 Pandemic)","30,317","10.8"
+"HIV deaths","2020 (COVID-19 Pandemic)","19,136","6.8"
+"HIV prevalence","2021","1,068,119","380.3"
+"HIV diagnoses","2021","35,671","12.7"
+"HIV deaths","2021","20,181","7.2"
+"HIV prevalence","2022","1,092,023","386.6"
+"HIV diagnoses","2022","37,601","13.3"
+"HIV deaths","2022","18,937","6.7"

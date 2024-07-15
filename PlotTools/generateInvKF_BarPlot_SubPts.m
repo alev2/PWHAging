@@ -1,4 +1,4 @@
-function [] = generateInvKF_BarPlot(deathsByYearReal,deathsByYearKF,years,ageMesh,mortRates)
+function [] = generateInvKF_BarPlot_SubPts(deathsByYearReal,deathsByYearKF,years,ageMesh,mortRates,ageMesh2,interpType)
 %GENERATEINVKF_BARPLOT Summary of this function goes here
 %   Detailed explanation goes here
     lw=3;
@@ -7,9 +7,14 @@ function [] = generateInvKF_BarPlot(deathsByYearReal,deathsByYearKF,years,ageMes
     ms=10;
     
     posMat=[-1000 0 1500 650];
-
     
-
+    mortRatesCopy=[];
+    for kk=1:size(mortRates,2)
+       mortRateCur=interpn(ageMesh2,mortRates(:,kk),ageMesh,interpType);
+       mortRatesCopy=[mortRatesCopy mortRateCur];
+    end
+    mortRates=mortRatesCopy;   
+    
     colorMat=[...
     .000 .447 .741;
     .850 .325 .098;
@@ -57,11 +62,12 @@ function [] = generateInvKF_BarPlot(deathsByYearReal,deathsByYearKF,years,ageMes
     nexttile
     surf(ageMesh(1:4:(end-10)),2009:1:2022,1-exp(-mortRates(1:4:(end-10),2:end))')
     h=gca;
+    xlim([40 70])
     set(h,'ZScale','log');
-    colormap('hsv');
     colorbar;
+    colormap('hsv');
     set(gca,'FontSize',fs-3);
-    caxis([-.075 .8]);
+    caxis([.01 .1]);
     set(gcf,'Position',posMat);   
     
     nexttile
